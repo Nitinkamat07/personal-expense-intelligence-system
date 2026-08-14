@@ -113,9 +113,16 @@ async function handleFileUpload(file) {
 
     showToast('Uploading and parsing CSV file...', 'info');
 
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const headers = {};
+    if (csrfToken) {
+        headers['X-CSRFToken'] = csrfToken;
+    }
+
     try {
         const response = await fetch('/api/import', {
             method: 'POST',
+            headers: headers,
             body: formData
         });
         const data = await response.json();

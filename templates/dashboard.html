@@ -170,6 +170,33 @@
         </div>
     </div>
 
+    <!-- Financial Snapshot Section -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm border-start border-primary border-4">
+                <div class="card-body p-3">
+                    <h6 class="fw-bold text-uppercase text-muted small mb-2"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Financial Snapshot</h6>
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary-subtle text-primary"><i class="bi bi-tag-fill me-1"></i>Top Category</span>
+                            <span class="fw-semibold text-body" id="snapshotTopCat">Loading top category...</span>
+                        </div>
+                        <div class="vr d-none d-md-block" style="height: 20px; opacity: 0.15;"></div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-info-subtle text-info"><i class="bi bi-graph-up-arrow me-1"></i>Month Projection</span>
+                            <span class="fw-semibold text-body" id="snapshotProjection">Calculating projection...</span>
+                        </div>
+                        <div class="vr d-none d-md-block" style="height: 20px; opacity: 0.15;"></div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-success-subtle text-success" id="snapshotStatusBadge"><i class="bi bi-check-circle-fill me-1"></i>Status</span>
+                            <span class="fw-semibold text-body" id="snapshotStatusText">Analyzing budget status...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Intelligent Insights & Dynamic Recommendations -->
     <div class="row g-3 mb-4">
         <div class="col-12">

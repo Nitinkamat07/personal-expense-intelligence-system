@@ -142,10 +142,17 @@ async function loadBudgets() {
 
         if (data.category_budgets.length === 0) {
             container.innerHTML = `
-                <div class="col-12 text-center text-muted py-5">
-                    <i class="bi bi-piggy-bank fs-1 d-block mb-2"></i>
-                    <p class="mb-2">No category budgets created yet.</p>
-                    <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#setBudgetModal">Set First Budget</button>
+                <div class="col-12 text-center py-5 px-3">
+                    <div class="bg-body-tertiary rounded-4 p-5 border border-dashed mx-auto" style="max-width: 500px;">
+                        <div class="feature-icon bg-primary-subtle text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                            <i class="bi bi-piggy-bank fs-2 text-primary"></i>
+                        </div>
+                        <h5 class="fw-bold text-body mb-2">No category budgets yet</h5>
+                        <p class="text-muted small mb-4">Set spending limits for Food, Transport, Shopping, and other categories to start tracking your financial goals.</p>
+                        <button class="btn btn-primary fw-semibold px-4" data-bs-toggle="modal" data-bs-target="#setBudgetModal">
+                            <i class="bi bi-plus-lg me-1"></i> Create Your First Budget
+                        </button>
+                    </div>
                 </div>`;
             return;
         }

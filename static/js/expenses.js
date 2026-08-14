@@ -101,7 +101,7 @@ function renderExpensesTable(expenses) {
         return `
             <tr>
                 <td class="ps-3 text-nowrap">${e.date}</td>
-                <td class="fw-semibold">
+                <td class="fw-semibold expense-desc-cell">
                     ${e.description}
                     ${e.notes ? `<small class="text-muted d-block font-monospace" style="font-size:0.75rem;">${e.notes}</small>` : ''}
                 </td>

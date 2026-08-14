@@ -84,10 +84,40 @@ async function loadDashboardData() {
         // 5. Render Recent Transactions Table
         renderRecentTransactionsTable(data.recent_transactions, symbol);
 
+        // 6. Update Financial Snapshot section with real data
+        if (document.getElementById('snapshotTopCat')) {
+            document.getElementById('snapshotTopCat').textContent = `${summary.highest_spending_category} (${symbol}${summary.highest_category_amount.toLocaleString('en-IN')})`;
+        }
+        if (document.getElementById('snapshotProjection')) {
+            document.getElementById('snapshotProjection').textContent = `${symbol}${fc.predicted_total_spending.toLocaleString('en-IN')} projected vs ${symbol}${summary.monthly_budget.toLocaleString('en-IN')} budget`;
+        }
+        if (document.getElementById('snapshotStatusText')) {
+            const snapStatusText = document.getElementById('snapshotStatusText');
+            const snapStatusBadge = document.getElementById('snapshotStatusBadge');
+            if (fc.will_exceed_budget) {
+                snapStatusBadge.className = 'badge bg-danger-subtle text-danger';
+                snapStatusBadge.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i>Alert';
+                snapStatusText.textContent = `Predicted to exceed budget by ${symbol}${Math.abs(fc.budget_difference).toLocaleString('en-IN')}!`;
+            } else {
+                snapStatusBadge.className = 'badge bg-success-subtle text-success';
+                snapStatusBadge.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>On Track';
+                snapStatusText.textContent = `Under budget by ${symbol}${fc.budget_difference.toLocaleString('en-IN')}.`;
+            }
+        }
+
     } catch (err) {
         showToast(`Dashboard error: ${err.message}`, 'danger');
         if (monthYearText) {
             monthYearText.textContent = 'Error Loading';
+        }
+        if (document.getElementById('snapshotTopCat')) {
+            document.getElementById('snapshotTopCat').textContent = 'Error loading';
+        }
+        if (document.getElementById('snapshotProjection')) {
+            document.getElementById('snapshotProjection').textContent = 'Error loading';
+        }
+        if (document.getElementById('snapshotStatusText')) {
+            document.getElementById('snapshotStatusText').textContent = 'Error loading';
         }
     }
 }
