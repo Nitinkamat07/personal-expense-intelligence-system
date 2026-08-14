@@ -2,7 +2,7 @@ import pytest
 from datetime import date
 from app import create_app
 from config import TestingConfig
-from models import db, User, Expense
+from models import db, User, Expense, Budget
 
 @pytest.fixture
 def app():
@@ -155,5 +155,53 @@ def test_dashboard_api(client, app):
     assert data['summary']['transaction_count'] == 2
     assert data['category_breakdown']['Food'] == 350.0
     assert data['category_breakdown']['Transport'] == 50.0
+
+def test_anomaly_detector_decimal_scenario(client, app):
+    from decimal import Decimal
+    # Populate the database with 5 expenses (Decimal amount type) to exceed the min_history_records threshold
+    with app.app_context():
+        user = User.query.filter_by(email='exp@example.com').first()
+        expenses = [
+            Expense(user_id=user.id, amount=Decimal("200.00"), description="Office Lunch 1", category="Food", date=date(2026, 8, 1), anomaly_status="pending"),
+            Expense(user_id=user.id, amount=Decimal("250.00"), description="Office Lunch 2", category="Food", date=date(2026, 8, 2), anomaly_status="pending"),
+            Expense(user_id=user.id, amount=Decimal("3000.00"), description="Fancy Dinner", category="Food", date=date(2026, 8, 3), anomaly_status="pending"),
+            Expense(user_id=user.id, amount=Decimal("220.00"), description="Office Lunch 3", category="Food", date=date(2026, 8, 4), anomaly_status="pending"),
+            Expense(user_id=user.id, amount=Decimal("240.00"), description="Office Lunch 4", category="Food", date=date(2026, 8, 5), anomaly_status="pending")
+        ]
+        db.session.add_all(expenses)
+        db.session.commit()
+
+    # Query the anomalies API, which runs batch_evaluate
+    res = client.get('/api/anomalies')
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data['success'] is True
+    
+    # Verify that the outlier (Fancy Dinner: 3000.00) is flagged as an anomaly
+    anomalies = data['anomalies']
+    assert any(a['description'] == 'Fancy Dinner' and a['is_anomaly'] is True for a in anomalies)
+
+def test_insights_api(client, app):
+    from decimal import Decimal
+    # Setup some test budgets and expenses
+    with app.app_context():
+        user = User.query.filter_by(email='exp@example.com').first()
+        b1 = Budget(user_id=user.id, category="Food", amount=Decimal("1000.00"), month=date.today().month, year=date.today().year)
+        e1 = Expense(user_id=user.id, amount=Decimal("1200.00"), description="Exceeding Lunch", category="Food", date=date.today())
+        db.session.add_all([b1, e1])
+        db.session.commit()
+
+    res = client.get('/api/insights')
+    assert res.status_code == 200
+    data = res.get_json()
+    assert data['success'] is True
+    assert 'insights' in data
+    assert 'recommendations' in data
+    
+    # Check that our aligned budget exceeding wording works in the insight engine too
+    food_exceeded_alerts = [ins for ins in data['insights'] if "Food Budget Exceeded" in ins['title']]
+    assert len(food_exceeded_alerts) > 0
+    assert "exceeded your Food budget by ₹200.00" in food_exceeded_alerts[0]['message']
+
 
 

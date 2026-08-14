@@ -19,6 +19,7 @@ class AnomalyDetector:
         Returns: (is_anomaly, reason)
         """
         from datetime import date
+        new_amount = float(new_amount)
         if date_val is None:
             date_val = date.today()
 
@@ -102,7 +103,7 @@ class AnomalyDetector:
 
         df = pd.DataFrame([{
             'id': e.id,
-            'amount': e.amount,
+            'amount': float(e.amount),
             'category': e.category,
             'status': e.anomaly_status
         } for e in user_expenses])

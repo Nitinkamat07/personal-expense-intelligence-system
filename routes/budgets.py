@@ -35,9 +35,14 @@ def get_budgets():
         b_amount_f = float(b.amount)
         pct = (spent / b_amount_f * 100) if b_amount_f > 0 else 0.0
         
-        if pct >= 100:
+        if spent > b_amount_f:
             status = 'exceeded'
-            warning_msg = f"You have exceeded your {b.category} budget by {pct - 100:.0f}%!"
+            amount_exceeded = spent - b_amount_f
+            pct_exceeded = (amount_exceeded / b_amount_f) * 100
+            warning_msg = f"You have exceeded your {b.category} budget by ₹{amount_exceeded:,.2f} ({pct_exceeded:.0f}%)!"
+        elif spent == b_amount_f:
+            status = 'exceeded'
+            warning_msg = "Budget fully used"
         elif pct >= 80:
             status = 'warning'
             warning_msg = f"You have used {pct:.0f}% of your {b.category} budget."

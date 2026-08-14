@@ -131,29 +131,44 @@ class SpendingCopilotService:
         for cat in set(list(curr_sums.keys()) + list(prev_sums.keys())):
             cat_diffs[cat] = curr_sums.get(cat, 0.0) - prev_sums.get(cat, 0.0)
 
-        highest_increase_cat = max(cat_diffs, key=cat_diffs.get)
-        highest_increase_val = cat_diffs[highest_increase_cat]
-
-        # Find the single largest transaction in that increased category
-        cat_expenses = [e for e in curr_expenses if e.category == highest_increase_cat]
-        largest_txn = max(cat_expenses, key=lambda x: x.amount) if cat_expenses else None
+        category_increases = {cat: d for cat, d in cat_diffs.items() if d > 0}
+        category_decreases = {cat: d for cat, d in cat_diffs.items() if d < 0}
 
         if diff > 0:
-            pct = (diff / prev_total) * 100
+            pct = (diff / prev_total) * 100 if prev_total > 0 else 0.0
+            if category_increases:
+                highest_increase_cat = max(category_increases, key=category_increases.get)
+                highest_increase_val = category_increases[highest_increase_cat]
+            else:
+                highest_increase_cat = "N/A"
+                highest_increase_val = 0.0
+
+            # Find the single largest transaction in that increased category
+            cat_expenses = [e for e in curr_expenses if e.category == highest_increase_cat] if highest_increase_cat != "N/A" else []
+            largest_txn = max(cat_expenses, key=lambda x: x.amount) if cat_expenses else None
+
             answer = (
                 f"Your spending has **increased by ₹{diff:,.2f} (+{pct:.1f}%)** MoM. "
                 f"Last month you spent ₹{prev_total:,.2f}, and this month you spent ₹{curr_total:,.2f}.\n\n"
-                f"📈 The primary driver of this increase is the **{highest_increase_cat}** category, which grew by **₹{highest_increase_val:,.2f}**.\n"
             )
-            if largest_txn:
-                answer += f"The single largest transaction in {highest_increase_cat} was **'{largest_txn.description}'** costing **₹{largest_txn.amount:,.2f}** on {largest_txn.date.strftime('%b %d')}."
+            if highest_increase_cat != "N/A":
+                answer += f"📈 The primary driver of this increase is the **{highest_increase_cat}** category, which grew by **₹{highest_increase_val:,.2f}**.\n"
+                if largest_txn:
+                    answer += f"The single largest transaction in {highest_increase_cat} was **'{largest_txn.description}'** costing **₹{largest_txn.amount:,.2f}** on {largest_txn.date.strftime('%b %d')}."
+            else:
+                answer += "There were no specific categories with spending increases."
         else:
-            pct = (abs(diff) / prev_total) * 100
+            pct = (abs(diff) / prev_total) * 100 if prev_total > 0 else 0.0
             answer = (
                 f"Great news! Your spending has **decreased by ₹{abs(diff):,.2f} (-{pct:.1f}%)** MoM. "
                 f"Last month you spent ₹{prev_total:,.2f}, compared to ₹{curr_total:,.2f} this month.\n\n"
-                f"📉 The largest saving was in the **{highest_increase_cat}** category, where spending dropped by **₹{abs(highest_increase_val):,.2f}**."
             )
+            if category_decreases:
+                largest_saving_cat = min(category_decreases, key=category_decreases.get)
+                largest_saving_val = abs(category_decreases[largest_saving_cat])
+                answer += f"📉 The largest saving was in the **{largest_saving_cat}** category, where spending dropped by **₹{largest_saving_val:,.2f}**."
+            else:
+                answer += "No individual categories had decreased spending compared to last month."
 
         return {
             'success': True,
@@ -163,8 +178,8 @@ class SpendingCopilotService:
                 'current_total': curr_total,
                 'previous_total': prev_total,
                 'difference': diff,
-                'driver_category': highest_increase_cat,
-                'driver_amount': highest_increase_val
+                'driver_category': highest_increase_cat if diff > 0 else (largest_saving_cat if category_decreases else None),
+                'driver_amount': highest_increase_val if diff > 0 else (category_decreases.get(largest_saving_cat, 0.0) if category_decreases else 0.0)
             }
         }
 

@@ -103,17 +103,23 @@ class InsightEngine:
             c_spent = curr_cat_sums.get(cat, 0.0)
             if b_amt > 0:
                 pct = (c_spent / b_amt) * 100
-                if pct >= 100:
+                if c_spent > b_amt:
                     insights.append({
                         'type': 'warning',
                         'title': f'{cat} Budget Exceeded!',
-                        'message': f"You have used {pct:.0f}% of your {cat} budget (₹{c_spent:,.0f} spent of ₹{b_amt:,.0f})."
+                        'message': f"You have exceeded your {cat} budget by ₹{c_spent - b_amt:,.2f} ({pct - 100:.0f}%)."
+                    })
+                elif c_spent == b_amt:
+                    insights.append({
+                        'type': 'warning',
+                        'title': f'{cat} Budget Fully Used',
+                        'message': "Budget fully used"
                     })
                 elif pct >= 80:
                     insights.append({
                         'type': 'warning',
                         'title': f'{cat} Budget Warning',
-                        'message': f"You have used {pct:.0f}% of your {cat} budget (₹{c_spent:,.0f} spent of ₹{b_amt:,.0f})."
+                        'message': f"You have used {pct:.0f}% of your {cat} budget."
                     })
 
         # 5. Recurring Subscriptions Detection

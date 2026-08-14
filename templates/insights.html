@@ -119,6 +119,10 @@ async function loadForecast() {
         document.getElementById('fcDisclaimer').textContent = fc.disclaimer;
     } catch (err) {
         showToast(err.message, 'danger');
+        const summary = document.getElementById('fcSummary');
+        if (summary) {
+            summary.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-triangle-fill me-1"></i> Failed to evaluate spending trend.</span>`;
+        }
     }
 }
 
@@ -152,6 +156,10 @@ async function loadAnomalies() {
         `).join('');
     } catch (err) {
         showToast(err.message, 'danger');
+        const tbody = document.getElementById('anomaliesTableBody');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4"><i class="bi bi-exclamation-triangle-fill text-danger me-1"></i> Failed to scan for anomalies. ${err.message}</td></tr>`;
+        }
     }
 }
 
@@ -207,6 +215,10 @@ async function loadInsightsData() {
         }
     } catch (err) {
         showToast(err.message, 'danger');
+        const ins = document.getElementById('insightsList');
+        const rec = document.getElementById('recommendationsList');
+        if (ins) ins.innerHTML = `<div class="text-danger">Failed to load insights.</div>`;
+        if (rec) rec.innerHTML = `<div class="text-danger">Failed to load recommendations.</div>`;
     }
 }
 </script>
