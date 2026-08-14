@@ -9,9 +9,16 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function loadDashboardData() {
+    const monthYearText = document.getElementById('monthYearText');
     try {
         const data = await fetchAPI('/api/dashboard');
         const summary = data.summary;
+        
+        if (monthYearText) {
+            const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const now = new Date();
+            monthYearText.textContent = `${months[now.getMonth()]} ${now.getFullYear()}`;
+        }
         const symbol = summary.currency_symbol || '₹';
 
         // 1. Update Metrics Cards
@@ -79,6 +86,9 @@ async function loadDashboardData() {
 
     } catch (err) {
         showToast(`Dashboard error: ${err.message}`, 'danger');
+        if (monthYearText) {
+            monthYearText.textContent = 'Error Loading';
+        }
     }
 }
 
