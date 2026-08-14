@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Spending Copilot - Personal Expense Intelligence{% endblock %}
+
+{% block content %}
+<div class="copilot-page">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-2">
+        <div>
+            <h2 class="fw-extrabold m-0">Spending Copilot</h2>
+            <p class="text-muted mb-0">Ask questions about your transactions, budgets, and subscriptions with 100% database accuracy.</p>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <!-- Sidebar: Suggestion Panel -->
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-3 px-3">
+                    <h5 class="fw-bold mb-0 text-primary"><i class="bi bi-lightbulb me-2"></i>Quick Suggestions</h5>
+                </div>
+                <div class="card-body p-3">
+                    <p class="small text-muted">Click any query below to ask your Copilot instantly:</p>
+                    <div class="d-flex flex-column gap-2">
+                        <button class="btn btn-outline-primary btn-sm text-start py-2 px-3 quick-query-btn" data-query="Where am I spending the most money this month?">
+                            <i class="bi bi-pie-chart me-2"></i> Where am I spending the most?
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm text-start py-2 px-3 quick-query-btn" data-query="Why did I spend more this month compared to last month?">
+                            <i class="bi bi-graph-up-arrow me-2"></i> Why did I spend more this month?
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm text-start py-2 px-3 quick-query-btn" data-query="How much of my budget is left?">
+                            <i class="bi bi-bullseye me-2"></i> How much budget is left?
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm text-start py-2 px-3 quick-query-btn" data-query="Show me my active recurring subscriptions.">
+                            <i class="bi bi-calendar-event me-2"></i> Show my active subscriptions
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-sm d-flex flex-column" style="height: 500px;">
+                <!-- Chat Header -->
+                <div class="card-header bg-primary text-white border-0 py-3 px-3 d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="avatar bg-white-subtle text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; background: rgba(255,255,255,0.15);">
+                            <i class="bi bi-chat-left-dots fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0 lh-1">Copilot Terminal</h5>
+                            <small class="text-white-50" style="font-size:0.75rem;">Offline SQL Analytic Engine</small>
+                        </div>
+                    </div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 d-inline-flex align-items-center gap-1">
+                        <span class="pulse-dot" style="width: 6px; height: 6px;"></span> Connected
+                    </span>
+                </div>
+
+                <!-- Chat Body -->
+                <div class="card-body p-3 overflow-y-auto flex-grow-1" id="chatHistory" style="background-color: var(--bs-tertiary-bg);">
+                    <!-- Welcome message -->
+                    <div class="chat-message system-message mb-3 d-flex align-items-start gap-2">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 32px; height: 32px;">
+                            <i class="bi bi-robot"></i>
+                        </div>
+                        <div class="p-3 rounded-3 bg-body shadow-sm max-w-75 border">
+                            <p class="mb-0 small">Hello! I am your **Spending Copilot**. I analyze your database directly to help you understand where your money is going.</p>
+                            <p class="mb-0 mt-2 small">Ask me anything about your category spending, MoM changes, budget limits, or monthly recurring bills.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input Footer -->
+                <div class="card-footer bg-transparent border-top p-3">
+                    <form id="copilotForm" class="d-flex gap-2">
+                        <input type="text" id="copilotInput" class="form-control form-control-lg" placeholder="Type your financial question here..." required autocomplete="off">
+                        <button type="submit" class="btn btn-primary px-4 fw-bold shadow-sm d-flex align-items-center gap-1">
+                            <span>Ask</span> <i class="bi bi-send-fill"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('copilotForm');
+    const input = document.getElementById('copilotInput');
+    const history = document.getElementById('chatHistory');
+
+    // Quick suggestions listeners
+    document.querySelectorAll('.quick-query-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const query = btn.getAttribute('data-query');
+            submitQuery(query);
+        });
+    });
+
+    // Form submit listener
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const query = input.value.trim();
+        if (!query) return;
+        submitQuery(query);
+        input.value = '';
+    });
+
+    async function submitQuery(query) {
+        // Render User Message
+        appendMessage(query, 'user');
+        
+        // Show Loading message
+        const loadingId = appendMessage('<span class="spinner-border spinner-border-sm me-2" role="status"></span>Calculating metrics...', 'system', true);
+        
+        try {
+            const res = await fetchAPI('/api/copilot', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query })
+            });
+
+            // Remove loading
+            document.getElementById(loadingId)?.remove();
+
+            if (res.success) {
+                // Convert newlines to breaks or process simple markdown formatting
+                let formattedAnswer = res.answer
+                    .replace(/\n/g, '<br>')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>');
+                
+                appendMessage(formattedAnswer, 'system');
+            } else {
+                appendMessage(`Sorry, there was an error processing your query: ${res.message}`, 'error');
+            }
+        } catch (err) {
+            document.getElementById(loadingId)?.remove();
+            appendMessage(`Connection error: ${err.message}`, 'error');
+        }
+    }
+
+    function appendMessage(text, sender, isLoading = false) {
+        const msgId = 'msg-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+        const div = document.createElement('div');
+        div.id = msgId;
+        div.className = `chat-message ${sender}-message mb-3 d-flex align-items-start gap-2`;
+        
+        if (sender === 'user') {
+            div.className += ' justify-content-end';
+            div.innerHTML = `
+                <div class="p-3 rounded-3 text-white bg-primary shadow-sm" style="max-width: 80%;">
+                    <p class="mb-0 small">${text}</p>
+                </div>
+                <div class="bg-secondary-subtle text-secondary rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 32px; height: 32px;">
+                    <i class="bi bi-person"></i>
+                </div>
+            `;
+        } else {
+            const bgClass = sender === 'error' ? 'bg-danger-subtle text-danger border-danger-subtle' : 'bg-body border';
+            const icon = sender === 'error' ? 'bi-exclamation-octagon-fill text-danger' : 'bi-robot text-primary';
+            const iconBg = sender === 'error' ? 'bg-danger' : 'bg-primary';
+            
+            div.innerHTML = `
+                <div class="${iconBg} text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 32px; height: 32px;">
+                    <i class="bi ${icon.split(' ')[0]}"></i>
+                </div>
+                <div class="p-3 rounded-3 ${bgClass} shadow-sm" style="max-width: 80%;">
+                    <p class="mb-0 small">${text}</p>
+                </div>
+            `;
+        }
+
+        history.appendChild(div);
+        history.scrollTop = history.scrollHeight;
+        return msgId;
+    }
+});
+</script>
+{% endblock %}

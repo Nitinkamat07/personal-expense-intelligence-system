@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}CSV Import / Export - Personal Expense Intelligence{% endblock %}
+
+{% block content %}
+<div class="import-export-page">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-2">
+        <div>
+            <h2 class="fw-extrabold m-0">CSV Data Center</h2>
+            <p class="text-muted mb-0">Import transaction files from banks & credit cards or export your dataset.</p>
+        </div>
+        <div>
+            <a href="/api/export" class="btn btn-success fw-semibold shadow-sm">
+                <i class="bi bi-download me-1"></i> Export Expenses CSV
+            </a>
+        </div>
+    </div>
+
+    <!-- Drag & Drop CSV Import Area -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-transparent border-0 pt-3 px-4">
+            <h4 class="fw-bold mb-0"><i class="bi bi-file-earmark-arrow-up text-primary me-2"></i>Import Transactions from CSV</h4>
+        </div>
+        <div class="card-body px-4 pb-4">
+            <div class="upload-dropzone p-5 text-center border border-2 border-dashed rounded-3 bg-body-tertiary" id="dropzone">
+                <i class="bi bi-cloud-arrow-up display-3 text-primary mb-3 d-block"></i>
+                <h5 class="fw-bold mb-2">Drag and drop your CSV file here</h5>
+                <p class="text-muted mb-3 small">Supported columns: Date, Description, Amount, Category, Payment Method</p>
+                <input type="file" id="csvFileInput" accept=".csv" class="d-none">
+                <button type="button" class="btn btn-primary px-4 fw-semibold" onclick="document.getElementById('csvFileInput').click()">
+                    Browse CSV File
+                </button>
+            </div>
+
+            <!-- Import Progress / Summary Card -->
+            <div id="importSummaryCard" class="mt-4 d-none">
+                <div class="card border-0 bg-light p-4">
+                    <h5 class="fw-bold mb-3 d-flex align-items-center gap-2" id="importSummaryTitle">
+                        <i class="bi bi-check-circle-fill text-success fs-4"></i> Import Summary
+                    </h5>
+                    <div class="row g-3 text-center">
+                        <div class="col-3">
+                            <div class="p-3 bg-white rounded shadow-sm">
+                                <span class="text-uppercase text-muted fw-bold small">Imported</span>
+                                <h3 class="fw-bold text-success mb-0" id="statImported">0</h3>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="p-3 bg-white rounded shadow-sm">
+                                <span class="text-uppercase text-muted fw-bold small">Skipped</span>
+                                <h3 class="fw-bold text-warning mb-0" id="statSkipped">0</h3>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="p-3 bg-white rounded shadow-sm">
+                                <span class="text-uppercase text-muted fw-bold small">Duplicates</span>
+                                <h3 class="fw-bold text-info mb-0" id="statDuplicates">0</h3>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="p-3 bg-white rounded shadow-sm">
+                                <span class="text-uppercase text-muted fw-bold small">Invalid</span>
+                                <h3 class="fw-bold text-danger mb-0" id="statInvalid">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('csvFileInput');
+
+    dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('border-primary', 'bg-primary-subtle');
+    });
+
+    dropzone.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('border-primary', 'bg-primary-subtle');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('border-primary', 'bg-primary-subtle');
+        if (e.dataTransfer.files.length) {
+            handleFileUpload(e.dataTransfer.files[0]);
+        }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        if (fileInput.files.length) {
+            handleFileUpload(fileInput.files[0]);
+        }
+    });
+});
+
+async function handleFileUpload(file) {
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+        showToast('Please upload a valid .csv file.', 'danger');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    showToast('Uploading and parsing CSV file...', 'info');
+
+    try {
+        const response = await fetch('/api/import', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            showToast(data.message, 'success');
+            const stats = data.stats;
+            document.getElementById('statImported').textContent = stats.imported;
+            document.getElementById('statSkipped').textContent = stats.skipped;
+            document.getElementById('statDuplicates').textContent = stats.duplicates;
+            document.getElementById('statInvalid').textContent = stats.invalid;
+            document.getElementById('importSummaryCard').classList.remove('d-none');
+        } else {
+            showToast(data.message || 'Import failed', 'danger');
+        }
+    } catch (err) {
+        showToast(`Upload error: ${err.message}`, 'danger');
+    }
+}
+</script>
+{% endblock %}

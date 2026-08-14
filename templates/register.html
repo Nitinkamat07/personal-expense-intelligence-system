@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account - Personal Expense Intelligence{% endblock %}
+
+{% block public_content %}
+<div class="auth-container min-vh-100 d-flex align-items-center justify-content-center bg-body-tertiary p-3">
+    <div class="card border-0 shadow-lg" style="width: 100%; max-width: 480px; border-radius: 1rem;">
+        <div class="card-body p-4 p-sm-5">
+            <div class="text-center mb-4">
+                <div class="brand-icon bg-primary text-white rounded-3 d-inline-flex align-items-center justify-content-center fw-bold fs-3 mb-2" style="width: 52px; height: 52px;">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <h3 class="fw-bold">Create Account</h3>
+                <p class="text-muted small">Start analyzing and forecasting your personal expenses</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} small py-2">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form action="/register" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label for="username" class="form-label fw-semibold">Username</label>
+                    <input type="text" class="form-control" id="username" name="username" placeholder="alex_finance" required autofocus>
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label fw-semibold">Email Address</label>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="alex@example.com" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="monthly_budget" class="form-label fw-semibold">Monthly Budget Goal (₹)</label>
+                    <input type="number" step="500" class="form-control" id="monthly_budget" name="monthly_budget" value="25000" required>
+                </div>
+
+                <div class="mb-4">
+                    <label for="password" class="form-label fw-semibold">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Minimum 6 characters" minlength="6" required>
+                </div>
+
+                <div class="d-grid mb-3">
+                    <button type="submit" class="btn btn-primary btn-lg fw-bold shadow-sm">Create Account</button>
+                </div>
+
+                <div class="text-center small text-muted">
+                    Already registered? <a href="/login" class="text-primary fw-semibold">Sign In</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

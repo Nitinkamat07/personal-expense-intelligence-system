@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Personal Expense Intelligence{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+    <!-- Header Title Bar -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-2">
+        <div>
+            <h2 class="fw-extrabold m-0">Personal Expense Intelligence</h2>
+            <p class="text-muted mb-0">Real-time financial analytics, machine learning predictions & budget forecasting.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-body-tertiary text-body border px-3 py-2" id="currentMonthBadge">
+                <i class="bi bi-calendar3 me-1"></i> <span id="monthYearText">Loading...</span>
+            </span>
+        </div>
+    </div>
+
+    <!-- Summary Metrics Cards Grid -->
+    <div class="row g-3 mb-4">
+        <!-- 1. Total Spending This Month -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100 metric-card border-start border-primary border-4">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-uppercase text-muted fw-bold small" style="font-size: 0.75rem;">Total Spending</span>
+                        <div class="metric-icon bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                            <i class="bi bi-wallet2 fs-5"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold mb-1" id="dashTotalSpending">₹0.00</h3>
+                    <div class="d-flex align-items-center small" id="dashSpendingChangeWrapper">
+                        <span class="fw-semibold me-1" id="dashSpendingChangePct">0%</span>
+                        <span class="text-muted">vs last month</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Monthly Budget -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100 metric-card border-start border-info border-4">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-uppercase text-muted fw-bold small" style="font-size: 0.75rem;">Monthly Budget</span>
+                        <div class="metric-icon bg-info-subtle text-info rounded-circle d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                            <i class="bi bi-bullseye fs-5"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold mb-1" id="dashMonthlyBudget">₹0.00</h3>
+                    <small class="text-muted" id="dashTransactionCount">0 transactions recorded</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Remaining Budget -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100 metric-card border-start border-success border-4" id="remainingCard">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-uppercase text-muted fw-bold small" style="font-size: 0.75rem;">Remaining Budget</span>
+                        <div class="metric-icon bg-success-subtle text-success rounded-circle d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                            <i class="bi bi-currency-rupee fs-5"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold mb-1 text-success" id="dashRemainingBudget">₹0.00</h3>
+                    <div class="progress mt-2" style="height: 6px;">
+                        <div class="progress-bar bg-success" id="dashRemainingProgressBar" role="progressbar" style="width: 0%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Average Daily Spending -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm h-100 metric-card border-start border-warning border-4">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-uppercase text-muted fw-bold small" style="font-size: 0.75rem;">Average Daily</span>
+                        <div class="metric-icon bg-warning-subtle text-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                            <i class="bi bi-speedometer2 fs-5"></i>
+                        </div>
+                    </div>
+                    <h3 class="fw-bold mb-1" id="dashAvgDaily">₹0.00</h3>
+                    <small class="text-muted">Highest Category: <strong id="dashHighestCat" class="text-body">N/A</strong></small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 1: Spending Trend & Category Distribution -->
+    <div class="row g-3 mb-4">
+        <!-- Daily Trend Line Chart -->
+        <div class="col-12 col-lg-7">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-3 px-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-graph-up text-primary me-2"></i>Daily Spending Velocity</h5>
+                    <span class="badge bg-body-tertiary text-muted">Current Month</span>
+                </div>
+                <div class="card-body p-3">
+                    <div style="height: 280px; position: relative;">
+                        <canvas id="trendLineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Breakdown Doughnut Chart -->
+        <div class="col-12 col-lg-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-3 px-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-pie-chart text-info me-2"></i>Category Breakdown</h5>
+                    <span class="badge bg-body-tertiary text-muted">Distribution</span>
+                </div>
+                <div class="card-body p-3 d-flex align-items-center justify-content-center">
+                    <div style="height: 260px; width: 100%; position: relative;">
+                        <canvas id="categoryDoughnutChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 2: Monthly Comparison Bar & Top Categories -->
+    <div class="row g-3 mb-4">
+        <!-- 6-Month Comparison Bar Chart -->
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-3 px-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-bar-chart text-success me-2"></i>Monthly Comparison</h5>
+                    <span class="badge bg-body-tertiary text-muted">6 Months</span>
+                </div>
+                <div class="card-body p-3">
+                    <div style="height: 240px; position: relative;">
+                        <canvas id="monthlyBarChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Forecast & Anomalies Teaser -->
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-3 px-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-cpu text-warning me-2"></i>ML Forecast & Anomalies</h5>
+                    <a href="/insights" class="btn btn-sm btn-link text-decoration-none">View All <i class="bi bi-arrow-right"></i></a>
+                </div>
+                <div class="card-body p-3 d-flex flex-column gap-3">
+                    <!-- Forecast Box -->
+                    <div class="p-3 bg-body-tertiary rounded-3 border">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold text-uppercase small text-muted">Predicted Total Monthly Spending</span>
+                            <span class="badge bg-primary-subtle text-primary fw-bold" id="forecastStatusBadge">On Track</span>
+                        </div>
+                        <h4 class="fw-extrabold text-primary mb-1" id="dashPredictedTotal">₹0.00</h4>
+                        <p class="small text-muted mb-0" id="dashPredictionSummary">Calculating model forecast...</p>
+                    </div>
+
+                    <!-- Unusual Expense Highlight -->
+                    <div class="p-3 bg-warning-subtle border border-warning-subtle rounded-3" id="anomalyWidget">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+                            <span class="fw-bold text-dark">Unusual Expense Detected</span>
+                        </div>
+                        <p class="small text-dark mb-0" id="anomalyWidgetText">Scanning historical baseline...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Intelligent Insights & Dynamic Recommendations -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex align-items-center justify-content-between">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-lightbulb text-warning me-2"></i>Intelligent Insights & Recommendations</h5>
+                    <span class="badge bg-primary-subtle text-primary">Live Engine</span>
+                </div>
+                <div class="card-body p-3">
+                    <div class="row g-3" id="dashInsightsContainer">
+                        <!-- Dynamic Insights Inserted by JS -->
+                        <div class="col-12 text-center text-muted py-3">Loading dynamic insights...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions Table -->
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-3 px-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-clock-history text-secondary me-2"></i>Recent Transactions</h5>
+                    <a href="/expenses" class="btn btn-sm btn-outline-primary fw-semibold">View All Expenses</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Date</th>
+                                    <th>Description</th>
+                                    <th>Category</th>
+                                    <th>Payment Method</th>
+                                    <th class="text-end pe-3">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashRecentTableBody">
+                                <tr><td colspan="5" class="text-center text-muted py-4">Loading transactions...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}?v={{ range(1, 99999) | random }}"></script>
+{% endblock %}

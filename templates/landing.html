@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Personal Expense Intelligence - AI Financial Analytics{% endblock %}
+
+{% block public_content %}
+<div class="landing-page min-vh-100 d-flex flex-column bg-body-tertiary">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg border-bottom bg-body">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-primary fs-4" href="/">
+                <i class="bi bi-graph-up-arrow fs-3"></i> Expense AI
+            </a>
+            <div class="d-flex align-items-center gap-2">
+                <a href="/login" class="btn btn-outline-primary px-4 fw-semibold">Sign In</a>
+                <a href="/register" class="btn btn-primary px-4 fw-semibold">Get Started Free</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section py-5 my-auto">
+        <div class="container text-center py-5">
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 fs-6 mb-3">
+                <i class="bi bi-stars me-1"></i> Next-Gen Machine Learning Expense Intelligence
+            </span>
+            <h1 class="display-3 fw-extrabold text-body mb-3">
+                Stop just tracking expenses.<br><span class="text-primary">Understand & Predict Them.</span>
+            </h1>
+            <p class="lead text-muted mx-auto mb-4" style="max-width: 720px;">
+                An intelligent financial analytics platform powered by Machine Learning. Predict monthly spending, detect unusual transactions automatically, and gain actionable ML insights.
+            </p>
+            <div class="d-flex align-items-center justify-content-center gap-3">
+                <a href="/register" class="btn btn-primary btn-lg px-5 py-3 fw-bold shadow">
+                    Try Demo Account <i class="bi bi-arrow-right ms-2"></i>
+                </a>
+                <a href="/login" class="btn btn-outline-secondary btn-lg px-4 py-3 fw-semibold">
+                    Sign In
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Key Feature Grid -->
+    <section class="features-section py-5 bg-body border-top">
+        <div class="container py-4">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold fs-1">Production-Grade Intelligence Engine</h2>
+                <p class="text-muted">Built with Scikit-learn, TF-IDF NLP, Isolation Forest, and linear regression models.</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm p-4">
+                        <div class="feature-icon bg-primary-subtle text-primary rounded-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 50px; height: 50px;">
+                            <i class="bi bi-magic fs-3"></i>
+                        </div>
+                        <h4 class="fw-bold">Intelligent NLP Categorization</h4>
+                        <p class="text-muted">Uses TF-IDF text vectorization and Logistic Regression to auto-classify transactions like "Swiggy dinner" → Food with live confidence scoring.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm p-4">
+                        <div class="feature-icon bg-warning-subtle text-warning rounded-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 50px; height: 50px;">
+                            <i class="bi bi-exclamation-triangle fs-3"></i>
+                        </div>
+                        <h4 class="fw-bold">Isolation Forest Anomaly Detection</h4>
+                        <p class="text-muted">Automatically flags unusual transaction spikes using hybrid Z-Score thresholds and Isolation Forest models with natural language feedback.</p>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm p-4">
+                        <div class="feature-icon bg-success-subtle text-success rounded-3 d-inline-flex align-items-center justify-content-center mb-3" style="width: 50px; height: 50px;">
+                            <i class="bi bi-graph-up fs-3"></i>
+                        </div>
+                        <h4 class="fw-bold">Statistical Spending Forecasts</h4>
+                        <p class="text-muted">Extrapolates daily velocity and historical trends to forecast total monthly expenses and warn against budget deficits before they happen.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
