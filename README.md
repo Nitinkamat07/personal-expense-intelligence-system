@@ -6,6 +6,12 @@ Personal Expense Intelligence is a comprehensive web application designed to tra
 
 ---
 
+## 🚀 Live Demo
+
+**[View Live Demo](https://personalexpenseintelligencesystem.vercel.app/login?next=%2F)**
+
+---
+
 ## 🌟 Key Features
 
 ### 🧠 1. Intelligent ML Expense Categorization
