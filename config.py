@@ -16,10 +16,11 @@ class Config:
     db_url = os.environ.get('DATABASE_URL')
     if db_url and db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
-        
+    
+    # IMPORTANT: On Vercel, use DATABASE_URL with PostgreSQL (not SQLite in /tmp which is ephemeral)
+    # To set up: Create a free Vercel Postgres DB and add DATABASE_URL to Vercel environment variables
     SQLALCHEMY_DATABASE_URI = db_url or (
-        f"sqlite:////tmp/expense_intelligence.db" if os.environ.get('VERCEL')
-        else f"sqlite:///{os.path.join(BASE_DIR, 'expense_intelligence.db')}"
+        f"sqlite:///{os.path.join(BASE_DIR, 'expense_intelligence.db')}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     

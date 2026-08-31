@@ -130,8 +130,15 @@ def create_expense():
         anomaly_reason=reason if is_anom else None
     )
 
-    db.session.add(expense)
-    db.session.commit()
+    try:
+        db.session.add(expense)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Failed to save expense: {str(e)}'
+        }), 500
 
     return jsonify({
         'success': True,
