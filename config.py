@@ -14,8 +14,13 @@ class Config:
         SECRET_KEY = 'expense-intelligence-dev-fallback-key'
         
     db_url = os.environ.get('DATABASE_URL')
-    if db_url and db_url.startswith("postgres://"):
-        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    if db_url:
+        # Convert postgres:// to postgresql:// for SQLAlchemy 1.4+
+        if db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql://", 1)
+        # Add SSL mode for remote Postgres databases
+        if "postgresql://" in db_url and "?" not in db_url:
+            db_url += "?sslmode=require"
     
     # IMPORTANT: On Vercel, use DATABASE_URL with PostgreSQL (not SQLite in /tmp which is ephemeral)
     # To set up: Create a free Vercel Postgres DB and add DATABASE_URL to Vercel environment variables
@@ -23,6 +28,13 @@ class Config:
         f"sqlite:///{os.path.join(BASE_DIR, 'expense_intelligence.db')}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # PostgreSQL connection pool settings for Vercel serverless
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,
+        "pool_recycle": 3600,
+        "connect_args": {"connect_timeout": 10}
+    } if db_url and "postgresql://" in str(db_url) else {}
     
     # ML & Upload Config
     ML_MODEL_DIR = os.path.join(BASE_DIR, 'ml', 'models')

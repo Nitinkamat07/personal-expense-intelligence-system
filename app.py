@@ -14,6 +14,10 @@ def create_app(config_class=None):
         
     app = Flask(__name__)
     app.config.from_object(config_class)
+    
+    # Apply SQLAlchemy engine options if available
+    if hasattr(config_class, 'SQLALCHEMY_ENGINE_OPTIONS') and config_class.SQLALCHEMY_ENGINE_OPTIONS:
+        app.config['SQLALCHEMY_ENGINE_OPTIONS'] = config_class.SQLALCHEMY_ENGINE_OPTIONS
 
     # Initialize CSRF protection
     csrf.init_app(app)
@@ -48,6 +52,19 @@ def create_app(config_class=None):
     app.register_blueprint(csv_bp)
     app.register_blueprint(copilot_bp)
 
+    @app.before_request
+    def before_request():
+        """Initialize database if not yet initialized"""
+        try:
+            # Test database connection
+            db.session.execute("SELECT 1")
+        except Exception as e:
+            print(f"Database connection warning: {e}")
+            try:
+                db.create_all()
+            except Exception as create_error:
+                print(f"Could not create tables: {create_error}")
+
     @app.route('/landing')
     def landing():
         return render_template('landing.html')
@@ -64,43 +81,45 @@ def create_app(config_class=None):
     # Ensure the schema exists without reseeding or recreating production data.
     with app.app_context():
         try:
+            print("[Database] Initializing database...")
             db.create_all()
-            
-            # Auto-seed demo user if database is empty (for first-time deployments)
-            try:
-                if User.query.count() == 0:
-                    demo_user = User(
-                        username='demo',
-                        email='demo@expense.ai',
-                        monthly_budget=25000.0,
-                        currency_symbol='₹'
-                    )
-                    demo_user.set_password('password123')
-                    db.session.add(demo_user)
-                    db.session.commit()
-                    print("✓ Demo user created: demo@expense.ai / password123")
-            except Exception as e:
-                print(f"Note: Could not check/create demo user: {e}")
-                db.session.rollback()
-            
-            # Train ML categorizer on sample data (if not already trained)
-            try:
-                from services.categorizer import categorizer
-                import pandas as pd
-                
-                # Check if model needs training
-                if not hasattr(categorizer.pipeline, 'classes_') or len(categorizer.pipeline.classes_) == 0:
-                    sample_data_path = os.path.join(os.path.dirname(__file__), 'data', 'sample_transactions.csv')
-                    if os.path.exists(sample_data_path):
-                        df = pd.read_csv(sample_data_path)
-                        if len(df) > 0 and 'Description' in df.columns and 'Category' in df.columns:
-                            categorizer.train(df['Description'].tolist(), df['Category'].tolist())
-                            print("✓ ML Categorizer trained on sample data")
-            except Exception as e:
-                print(f"Warning: Could not train categorizer: {e}")
+            print("[Database] Database schema initialized")
         except Exception as e:
-            print(f"Warning: Database initialization error: {e}")
-            print("App will attempt to initialize database on first request.")
+            print(f"[Database Warning] Database initialization warning: {e}")
+            print("   App will continue, but database may not be ready yet")
+        
+        # Auto-seed demo user if database is empty (for first-time deployments)
+        try:
+            if User.query.count() == 0:
+                demo_user = User(
+                    username='demo',
+                    email='demo@expense.ai',
+                    monthly_budget=25000.0,
+                    currency_symbol='₹'
+                )
+                demo_user.set_password('password123')
+                db.session.add(demo_user)
+                db.session.commit()
+                print("[Seed] Demo user created: demo@expense.ai / password123")
+        except Exception as e:
+            print(f"Note: Could not check/create demo user: {e}")
+            db.session.rollback()
+        
+        # Train ML categorizer on sample data (if not already trained)
+        try:
+            from services.categorizer import categorizer
+            import pandas as pd
+            
+            # Check if model needs training
+            if not hasattr(categorizer.pipeline, 'classes_') or len(categorizer.pipeline.classes_) == 0:
+                sample_data_path = os.path.join(os.path.dirname(__file__), 'data', 'sample_transactions.csv')
+                if os.path.exists(sample_data_path):
+                    df = pd.read_csv(sample_data_path)
+                    if len(df) > 0 and 'Description' in df.columns and 'Category' in df.columns:
+                        categorizer.train(df['Description'].tolist(), df['Category'].tolist())
+                        print("[ML] ML Categorizer trained on sample data")
+        except Exception as e:
+            print(f"Warning: Could not train categorizer: {e}")
 
     @app.after_request
     def add_header(response):
