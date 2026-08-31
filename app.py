@@ -64,6 +64,19 @@ def create_app(config_class=None):
     # Ensure the schema exists without reseeding or recreating production data.
     with app.app_context():
         db.create_all()
+        
+        # Auto-seed demo user if database is empty (for first-time deployments)
+        if User.query.count() == 0:
+            demo_user = User(
+                username='demo',
+                email='demo@expense.ai',
+                monthly_budget=25000.0,
+                currency_symbol='₹'
+            )
+            demo_user.set_password('password123')
+            db.session.add(demo_user)
+            db.session.commit()
+            print("✓ Demo user created: demo@expense.ai / password123")
 
     @app.after_request
     def add_header(response):
