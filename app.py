@@ -63,36 +63,44 @@ def create_app(config_class=None):
 
     # Ensure the schema exists without reseeding or recreating production data.
     with app.app_context():
-        db.create_all()
-        
-        # Auto-seed demo user if database is empty (for first-time deployments)
-        if User.query.count() == 0:
-            demo_user = User(
-                username='demo',
-                email='demo@expense.ai',
-                monthly_budget=25000.0,
-                currency_symbol='₹'
-            )
-            demo_user.set_password('password123')
-            db.session.add(demo_user)
-            db.session.commit()
-            print("✓ Demo user created: demo@expense.ai / password123")
-        
-        # Train ML categorizer on sample data (if not already trained)
         try:
-            from services.categorizer import categorizer
-            import pandas as pd
+            db.create_all()
             
-            # Check if model needs training
-            if not hasattr(categorizer.pipeline, 'classes_') or len(categorizer.pipeline.classes_) == 0:
-                sample_data_path = os.path.join(os.path.dirname(__file__), 'data', 'sample_transactions.csv')
-                if os.path.exists(sample_data_path):
-                    df = pd.read_csv(sample_data_path)
-                    if len(df) > 0 and 'Description' in df.columns and 'Category' in df.columns:
-                        categorizer.train(df['Description'].tolist(), df['Category'].tolist())
-                        print("✓ ML Categorizer trained on sample data")
+            # Auto-seed demo user if database is empty (for first-time deployments)
+            try:
+                if User.query.count() == 0:
+                    demo_user = User(
+                        username='demo',
+                        email='demo@expense.ai',
+                        monthly_budget=25000.0,
+                        currency_symbol='₹'
+                    )
+                    demo_user.set_password('password123')
+                    db.session.add(demo_user)
+                    db.session.commit()
+                    print("✓ Demo user created: demo@expense.ai / password123")
+            except Exception as e:
+                print(f"Note: Could not check/create demo user: {e}")
+                db.session.rollback()
+            
+            # Train ML categorizer on sample data (if not already trained)
+            try:
+                from services.categorizer import categorizer
+                import pandas as pd
+                
+                # Check if model needs training
+                if not hasattr(categorizer.pipeline, 'classes_') or len(categorizer.pipeline.classes_) == 0:
+                    sample_data_path = os.path.join(os.path.dirname(__file__), 'data', 'sample_transactions.csv')
+                    if os.path.exists(sample_data_path):
+                        df = pd.read_csv(sample_data_path)
+                        if len(df) > 0 and 'Description' in df.columns and 'Category' in df.columns:
+                            categorizer.train(df['Description'].tolist(), df['Category'].tolist())
+                            print("✓ ML Categorizer trained on sample data")
+            except Exception as e:
+                print(f"Warning: Could not train categorizer: {e}")
         except Exception as e:
-            print(f"Warning: Could not train categorizer: {e}")
+            print(f"Warning: Database initialization error: {e}")
+            print("App will attempt to initialize database on first request.")
 
     @app.after_request
     def add_header(response):

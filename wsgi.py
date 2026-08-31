@@ -1,11 +1,9 @@
 """
 WSGI entry point for Vercel deployment
 """
-from app import app, db
-import os
+from app import app
 
-# Ensure database directory exists
-os.makedirs(os.path.dirname(app.config['SQLALCHEMY_DATABASE_URI'].replace('sqlite:///', '')), exist_ok=True)
-
+# Export the Flask app for Vercel
 if __name__ == "__main__":
     app.run()
+
