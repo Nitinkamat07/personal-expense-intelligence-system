@@ -1,0 +1,61 @@
+# Development and testing files
+.venv/
+venv/
+.env
+.env.local
+.env.*.local
+.git/
+.gitignore
+.env.example
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Test files
+tests/
+conftest.py
+pytest.ini
+
+# Build files
+build/
+dist/
+*.egg
+
+# Node modules (if any)
+node_modules/
+
+# ML training scripts
+ml/train_categorizer.py
+ml/test_models/
+
+# Documentation
+README.md
+*.md
+
+# Data
+data/sample_transactions.csv
+
+# Deployment scripts
+setup_vercel_db.py
+deploy_complete.py
+seed.py
+
+# Temporary files
+*.tmp
+*.log
