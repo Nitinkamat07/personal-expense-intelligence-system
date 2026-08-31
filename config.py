@@ -13,7 +13,14 @@ class Config:
         # Fallback for dev only; production will override or fail
         SECRET_KEY = 'expense-intelligence-dev-fallback-key'
         
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or f"sqlite:///{os.path.join(BASE_DIR, 'expense_intelligence.db')}"
+    db_url = os.environ.get('DATABASE_URL')
+    if db_url and db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+        
+    SQLALCHEMY_DATABASE_URI = db_url or (
+        f"sqlite:////tmp/expense_intelligence.db" if os.environ.get('VERCEL')
+        else f"sqlite:///{os.path.join(BASE_DIR, 'expense_intelligence.db')}"
+    )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # ML & Upload Config

@@ -74,7 +74,8 @@ def create_app(config_class=None):
 
     return app
 
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
     print("Starting Personal Expense Intelligence Server on http://127.0.0.1:5000")
     app.run(host='0.0.0.0', port=5000, debug=True)
